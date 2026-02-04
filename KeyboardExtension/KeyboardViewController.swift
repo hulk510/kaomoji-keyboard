@@ -11,6 +11,7 @@ class KeyboardViewController: UIInputViewController {
 
         // データを先にロード（viewDidLoadはキーボード表示前に呼ばれる）
         _ = KaomojiData.shared
+        _ = KaomojiStorage.shared
 
         setupKeyboardView()
     }

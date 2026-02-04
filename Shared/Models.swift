@@ -6,6 +6,28 @@ struct Expression: Codable, Identifiable, Hashable {
     let face: String
     let category: String
     let tags: [String]
+    let variations: [String]?
+}
+
+// MARK: - 顔パーツ
+enum FacePartType: String, Codable, CaseIterable {
+    case leftEye, mouth, rightEye
+}
+
+struct FacePart: Codable, Identifiable, Hashable {
+    let id: String
+    let char: String
+    let type: FacePartType
+    let tags: [String]
+    let variations: [String]
+}
+
+// MARK: - 保存済み顔文字
+struct SavedKaomoji: Codable, Identifiable, Hashable {
+    let id: UUID
+    let kaomoji: String
+    let createdAt: Date
+    var isFavorite: Bool
 }
 
 // MARK: - 枠
@@ -44,6 +66,28 @@ struct KaomojiDataSet: Codable {
     let hands: [Hand]
     let decorations: [Decoration]
     let actions: [Action]
+    let faceParts: [FacePart]?
+}
+
+// MARK: - ビルダー状態（ID保存用）
+struct BuilderState: Codable, Hashable {
+    var expressionID: String?
+    var bracketID: String?
+    var handID: String?
+    var decorationID: String?
+    var actionID: String?
+    var leftEyeID: String?
+    var mouthID: String?
+    var rightEyeID: String?
+}
+
+// MARK: - 登録済み顔文字
+struct RegisteredKaomoji: Codable, Identifiable, Hashable {
+    let id: UUID
+    let kaomoji: String
+    let builderState: BuilderState
+    let createdAt: Date
+    var sortOrder: Int
 }
 
 // MARK: - カテゴリ

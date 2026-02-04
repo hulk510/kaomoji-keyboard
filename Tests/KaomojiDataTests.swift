@@ -48,7 +48,7 @@ final class KaomojiDataTests: XCTestCase {
 
     func testRecommendedSorting() {
         let data = KaomojiData.shared
-        let happyExpr = Expression(id: "test", face: "test", category: "happy", tags: ["bright", "cute"])
+        let happyExpr = Expression(id: "test", face: "test", category: "happy", tags: ["bright", "cute"], variations: nil)
         let hands = data.recommendedHands(for: happyExpr)
         // "none" は compatibleWith が空なのでスコア0、タグマッチするものが先頭に来る
         XCTAssertFalse(hands.isEmpty)
@@ -60,7 +60,7 @@ final class KaomojiDataTests: XCTestCase {
     func testRecommendedHandsSortByMatchScore() {
         let data = KaomojiData.shared
         // タグが多くマッチする表情を使う
-        let expr = Expression(id: "test", face: "test", category: "happy", tags: ["cute", "bright", "friendly"])
+        let expr = Expression(id: "test", face: "test", category: "happy", tags: ["cute", "bright", "friendly"], variations: nil)
         let hands = data.recommendedHands(for: expr)
         // スコア順に降順ソートされていることを確認
         for i in 0..<hands.count - 1 {
@@ -73,7 +73,7 @@ final class KaomojiDataTests: XCTestCase {
 
     func testRecommendedDecorationsRespectTags() {
         let data = KaomojiData.shared
-        let expr = Expression(id: "test", face: "test", category: "happy", tags: ["cute"])
+        let expr = Expression(id: "test", face: "test", category: "happy", tags: ["cute"], variations: nil)
         let decos = data.recommendedDecorations(for: expr)
         // タグ "cute" を持つ装飾がスコア0の装飾より前に来ること
         let firstMatchIndex = decos.firstIndex { $0.compatibleWith.contains("cute") }
@@ -105,5 +105,81 @@ final class KaomojiDataTests: XCTestCase {
                 }
             }
         }
+    }
+
+    // MARK: - 顔パーツテスト
+
+    func testFacePartsLoad() {
+        let data = KaomojiData.shared
+        XCTAssertFalse(data.faceParts.isEmpty, "faceParts should not be empty")
+    }
+
+    func testFacePartsByType() {
+        let data = KaomojiData.shared
+        for type in FacePartType.allCases {
+            let parts = data.faceParts(for: type)
+            XCTAssertFalse(parts.isEmpty, "\(type.rawValue) should have face parts")
+            // 全パーツが正しい型であること
+            for part in parts {
+                XCTAssertEqual(part.type, type, "Part '\(part.id)' should be type \(type.rawValue)")
+            }
+        }
+    }
+
+    func testFacePartUniqueIDs() {
+        let data = KaomojiData.shared
+        let partIDs = data.faceParts.map(\.id)
+        XCTAssertEqual(partIDs.count, Set(partIDs).count, "face part IDs must be unique")
+    }
+
+    func testFacePartVariationsExist() {
+        let data = KaomojiData.shared
+        let allIDs = Set(data.faceParts.map(\.id))
+        for part in data.faceParts {
+            for varID in part.variations {
+                XCTAssertTrue(allIDs.contains(varID),
+                    "Variation '\(varID)' referenced by '\(part.id)' does not exist")
+            }
+        }
+    }
+
+    func testVariationsReturnValidParts() {
+        let data = KaomojiData.shared
+        guard let firstPart = data.faceParts.first(where: { !$0.variations.isEmpty }) else {
+            XCTFail("No face parts with variations found")
+            return
+        }
+        let vars = data.variations(for: firstPart.id)
+        XCTAssertFalse(vars.isEmpty, "Should return variations for '\(firstPart.id)'")
+        XCTAssertEqual(vars.count, firstPart.variations.count)
+    }
+
+    func testExpressionVariationsExist() {
+        let data = KaomojiData.shared
+        let allIDs = Set(data.expressions.map(\.id))
+        for expr in data.expressions {
+            for varID in (expr.variations ?? []) {
+                XCTAssertTrue(allIDs.contains(varID),
+                    "Expression variation '\(varID)' referenced by '\(expr.id)' does not exist")
+            }
+        }
+    }
+
+    func testExpressionVariationsReturnValid() {
+        let data = KaomojiData.shared
+        guard let expr = data.expressions.first(where: { ($0.variations ?? []).isEmpty == false }) else {
+            XCTFail("No expressions with variations found")
+            return
+        }
+        let vars = data.expressionVariations(for: expr.id)
+        XCTAssertFalse(vars.isEmpty)
+        XCTAssertEqual(vars.count, (expr.variations ?? []).count)
+    }
+
+    func testRecommendedFaceParts() {
+        let data = KaomojiData.shared
+        let selectedPart = FacePart(id: "test", char: "´", type: .leftEye, tags: ["bright", "cute"], variations: [])
+        let recommended = data.recommendedFaceParts(for: .mouth, selectedParts: [selectedPart])
+        XCTAssertFalse(recommended.isEmpty)
     }
 }
