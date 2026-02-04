@@ -1,0 +1,44 @@
+included:
+  - Shared
+  - KeyboardExtension
+  - KaomojiKeyboard
+
+excluded:
+  - build
+  - DerivedData
+
+# キーボード向け: 簡潔さ重視
+opt_in_rules:
+  - empty_count
+  - force_unwrapping
+  - implicit_return
+
+disabled_rules:
+  - trailing_whitespace
+  - opening_brace
+
+# キーボードエクステンション向けの制限
+type_body_length:
+  warning: 300
+  error: 400
+
+file_length:
+  warning: 400
+  error: 500
+
+function_body_length:
+  warning: 40
+  error: 60
+
+cyclomatic_complexity:
+  warning: 8
+  error: 12
+
+line_length:
+  warning: 150
+  error: 200
+  ignores_comments: true
+
+nesting:
+  type_level: 2
+  function_level: 3

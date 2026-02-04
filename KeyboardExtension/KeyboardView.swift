@@ -10,15 +10,14 @@ struct KeyboardView: View {
     @State private var selectedTab: KeyboardTab = .expression
     @State private var selectedCategory: ExpressionCategory = .happy
     @State private var previewScale: CGFloat = 1.0
+    @State private var dragOffset: CGFloat = 0
 
     private let data = KaomojiData.shared
 
     private var isDark: Bool { colorScheme == .dark }
-
-    // 純正準拠のキーカラー
     private var keyBg: Color { isDark ? Color(white: 0.35) : .white }
     private var specialBg: Color { isDark ? Color(white: 0.22) : Color(UIColor(white: 0.72, alpha: 1)) }
-    private var selectedBg: Color { isDark ? Color(white: 0.45) : Color(UIColor(white: 0.82, alpha: 1)) }
+    private var selectedKeyBg: Color { isDark ? Color(white: 0.45) : Color(UIColor(white: 0.82, alpha: 1)) }
     private var textColor: Color { isDark ? .white : .black }
     private var subColor: Color { isDark ? Color(white: 0.55) : .gray }
     private var keyShadow: Color { isDark ? .clear : Color(UIColor(white: 0.5, alpha: 0.3)) }
@@ -99,58 +98,76 @@ struct KeyboardView: View {
     private var gridArea: some View {
         Group {
             switch selectedTab {
-            case .expression: expressionPager
-            case .bracket:    partGrid(items: data.brackets.map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : "\($0.open) \($0.close)", isSelected: builder.bracket?.id == $0.id) }) { id in builder.bracket = data.brackets.first { $0.id == id } }
-            case .hand:       handGridView
-            case .decoration: decorationGridView
-            case .action:     actionGridView
+            case .expression: expressionView
+            case .bracket:    partsGrid(makeBracketItems()) { id in builder.bracket = data.brackets.first { $0.id == id } }
+            case .hand:       partsGrid(makeHandItems()) { id in builder.hand = data.hands.first { $0.id == id } }
+            case .decoration: partsGrid(makeDecorationItems()) { id in builder.decoration = data.decorations.first { $0.id == id } }
+            case .action:     partsGrid(makeActionItems()) { id in builder.action = data.actions.first { $0.id == id } }
             }
         }
     }
 
-    private var expressionPager: some View {
-        TabView(selection: $selectedCategory) {
-            ForEach(ExpressionCategory.allCases, id: \.self) { category in
-                ScrollView {
-                    LazyVGrid(columns: gridColumns, spacing: 4) {
-                        ForEach(data.expressions(for: category)) { expression in
-                            keyButton(
-                                label: expression.face,
-                                isSelected: builder.expression?.id == expression.id
-                            ) {
-                                builder.expression = expression
-                                if builder.bracket == nil {
-                                    builder.bracket = data.brackets.first
-                                }
+    // MARK: - 表情: スワイプでカテゴリ切り替え（1カテゴリだけレンダリング）
+
+    private var expressionView: some View {
+        VStack(spacing: 0) {
+            // カテゴリインジケーター
+            HStack(spacing: 0) {
+                Text(selectedCategory.displayName)
+                    .font(.system(size: 11))
+                    .foregroundColor(subColor)
+                Spacer()
+                // ドットインジケーター
+                HStack(spacing: 3) {
+                    ForEach(ExpressionCategory.allCases, id: \.self) { cat in
+                        Circle()
+                            .fill(cat == selectedCategory ? textColor : subColor.opacity(0.4))
+                            .frame(width: 5, height: 5)
+                    }
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+
+            // グリッド（現在のカテゴリのみ）
+            ScrollView {
+                LazyVGrid(columns: gridColumns, spacing: 4) {
+                    ForEach(data.expressions(for: selectedCategory)) { expression in
+                        keyButton(
+                            label: expression.face,
+                            isSelected: builder.expression?.id == expression.id
+                        ) {
+                            builder.expression = expression
+                            if builder.bracket == nil {
+                                builder.bracket = data.brackets.first
                             }
                         }
                     }
-                    .padding(.horizontal, 3)
-                    .padding(.vertical, 2)
                 }
-                .tag(category)
+                .padding(.horizontal, 3)
+                .padding(.vertical, 2)
             }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 30, coordinateSpace: .local)
+                    .onEnded { value in
+                        let horizontal = value.translation.width
+                        let vertical = value.translation.height
+                        // 横方向の移動が縦より大きい場合のみカテゴリ切り替え
+                        guard abs(horizontal) > abs(vertical) else { return }
+                        let allCases = ExpressionCategory.allCases
+                        guard let idx = allCases.firstIndex(of: selectedCategory) else { return }
+                        if horizontal < 0 && idx < allCases.count - 1 {
+                            selectedCategory = allCases[idx + 1]
+                        } else if horizontal > 0 && idx > 0 {
+                            selectedCategory = allCases[idx - 1]
+                        }
+                    }
+            )
         }
-        .tabViewStyle(.page(indexDisplayMode: .automatic))
     }
 
-    private var handGridView: some View {
-        let items = (builder.expression.map { data.recommendedHands(for: $0) } ?? data.hands)
-            .map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : "\($0.left) \($0.right)", isSelected: builder.hand?.id == $0.id) }
-        return partGrid(items: items) { id in builder.hand = data.hands.first { $0.id == id } }
-    }
-
-    private var decorationGridView: some View {
-        let items = (builder.expression.map { data.recommendedDecorations(for: $0) } ?? data.decorations)
-            .map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : $0.char, isSelected: builder.decoration?.id == $0.id) }
-        return partGrid(items: items) { id in builder.decoration = data.decorations.first { $0.id == id } }
-    }
-
-    private var actionGridView: some View {
-        let items = (builder.expression.map { data.recommendedActions(for: $0) } ?? data.actions)
-            .map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : $0.suffix, isSelected: builder.action?.id == $0.id) }
-        return partGrid(items: items) { id in builder.action = data.actions.first { $0.id == id } }
-    }
+    // MARK: - パーツデータ生成
 
     private struct PartItem: Identifiable {
         let id: String
@@ -158,7 +175,26 @@ struct KeyboardView: View {
         let isSelected: Bool
     }
 
-    private func partGrid(items: [PartItem], onSelect: @escaping (String) -> Void) -> some View {
+    private func makeBracketItems() -> [PartItem] {
+        data.brackets.map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : "\($0.open) \($0.close)", isSelected: builder.bracket?.id == $0.id) }
+    }
+
+    private func makeHandItems() -> [PartItem] {
+        let list = builder.expression.map { data.recommendedHands(for: $0) } ?? data.hands
+        return list.map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : "\($0.left) \($0.right)", isSelected: builder.hand?.id == $0.id) }
+    }
+
+    private func makeDecorationItems() -> [PartItem] {
+        let list = builder.expression.map { data.recommendedDecorations(for: $0) } ?? data.decorations
+        return list.map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : $0.char, isSelected: builder.decoration?.id == $0.id) }
+    }
+
+    private func makeActionItems() -> [PartItem] {
+        let list = builder.expression.map { data.recommendedActions(for: $0) } ?? data.actions
+        return list.map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : $0.suffix, isSelected: builder.action?.id == $0.id) }
+    }
+
+    private func partsGrid(_ items: [PartItem], onSelect: @escaping (String) -> Void) -> some View {
         ScrollView {
             LazyVGrid(columns: gridColumns, spacing: 4) {
                 ForEach(items) { item in
@@ -177,7 +213,9 @@ struct KeyboardView: View {
     private var bottomTabBar: some View {
         HStack(spacing: 0) {
             ForEach(KeyboardTab.allCases, id: \.self) { tab in
-                Button(action: { selectedTab = tab }) {
+                Button {
+                    selectedTab = tab
+                } label: {
                     Text(tab.rawValue)
                         .font(.system(size: 14, weight: selectedTab == tab ? .semibold : .regular))
                         .foregroundColor(selectedTab == tab ? textColor : subColor)
@@ -189,7 +227,9 @@ struct KeyboardView: View {
             }
 
             if builder.hasSelection {
-                Button(action: { builder.reset() }) {
+                Button {
+                    builder.reset()
+                } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(subColor)
@@ -212,7 +252,7 @@ struct KeyboardView: View {
                 .foregroundColor(textColor)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 9)
-                .background(isSelected ? selectedBg : keyBg)
+                .background(isSelected ? selectedKeyBg : keyBg)
                 .cornerRadius(5)
                 .shadow(color: keyShadow, radius: 0, x: 0, y: 1)
         }

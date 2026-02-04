@@ -48,14 +48,14 @@ struct KaomojiDataSet: Codable {
 
 // MARK: - カテゴリ
 enum ExpressionCategory: String, CaseIterable {
-    case happy = "happy"
-    case sad = "sad"
-    case angry = "angry"
-    case surprised = "surprised"
-    case shy = "shy"
-    case smug = "smug"
-    case neutral = "neutral"
-    case animal = "animal"
+    case happy
+    case sad
+    case angry
+    case surprised
+    case shy
+    case smug
+    case neutral
+    case animal
     
     var displayName: String {
         switch self {

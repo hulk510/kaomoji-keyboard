@@ -8,6 +8,10 @@ class KeyboardViewController: UIInputViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        // データを先にロード（viewDidLoadはキーボード表示前に呼ばれる）
+        _ = KaomojiData.shared
+
         setupKeyboardView()
     }
 
