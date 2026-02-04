@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1202F4E12F3337040092A465 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1202F4E02F3337040092A465 /* PrivacyInfo.xcprivacy */; };
+		1202F4E32F3337130092A465 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1202F4E22F3337130092A465 /* PrivacyInfo.xcprivacy */; };
 		A1000001 /* KaomojiKeyboardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* KaomojiKeyboardApp.swift */; };
 		A1000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* ContentView.swift */; };
 		A1000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000003 /* Assets.xcassets */; };
@@ -66,6 +68,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1202F4E02F3337040092A465 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		1202F4E22F3337130092A465 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A2000001 /* KaomojiKeyboardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaomojiKeyboardApp.swift; sourceTree = "<group>"; };
 		A2000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A2000003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -127,6 +131,7 @@
 		A8000002 /* KaomojiKeyboard */ = {
 			isa = PBXGroup;
 			children = (
+				1202F4E02F3337040092A465 /* PrivacyInfo.xcprivacy */,
 				A2000025 /* KaomojiKeyboard.entitlements */,
 				A2000001 /* KaomojiKeyboardApp.swift */,
 				A2000002 /* ContentView.swift */,
@@ -138,6 +143,7 @@
 		A8000003 /* KeyboardExtension */ = {
 			isa = PBXGroup;
 			children = (
+				1202F4E22F3337130092A465 /* PrivacyInfo.xcprivacy */,
 				A2000026 /* KeyboardExtension.entitlements */,
 				A2000010 /* KeyboardViewController.swift */,
 				A2000011 /* KeyboardView.swift */,
@@ -158,6 +164,16 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		A8000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A3000001 /* KaomojiKeyboard.app */,
+				A3000002 /* KeyboardExtension.appex */,
+				C3000001 /* KaomojiKeyboardTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		C8000001 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
@@ -167,16 +183,6 @@
 				C2000004 /* PerformanceTests.swift */,
 			);
 			path = Tests;
-			sourceTree = "<group>";
-		};
-		A8000005 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				A3000001 /* KaomojiKeyboard.app */,
-				A3000002 /* KeyboardExtension.appex */,
-				C3000001 /* KaomojiKeyboardTests.xctest */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -284,6 +290,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1202F4E12F3337040092A465 /* PrivacyInfo.xcprivacy in Resources */,
 				A1000003 /* Assets.xcassets in Resources */,
 				A1000023 /* expressions.json in Resources */,
 			);
@@ -293,6 +300,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1202F4E32F3337130092A465 /* PrivacyInfo.xcprivacy in Resources */,
 				A1000033 /* expressions.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
