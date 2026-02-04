@@ -57,6 +57,33 @@ final class KaomojiDataTests: XCTestCase {
         }
     }
 
+    func testRecommendedHandsSortByMatchScore() {
+        let data = KaomojiData.shared
+        // タグが多くマッチする表情を使う
+        let expr = Expression(id: "test", face: "test", category: "happy", tags: ["cute", "bright", "friendly"])
+        let hands = data.recommendedHands(for: expr)
+        // スコア順に降順ソートされていることを確認
+        for i in 0..<hands.count - 1 {
+            let score1 = Set(expr.tags).intersection(hands[i].compatibleWith).count
+            let score2 = Set(expr.tags).intersection(hands[i + 1].compatibleWith).count
+            XCTAssertGreaterThanOrEqual(score1, score2,
+                "Hand '\(hands[i].id)' (score \(score1)) should be >= '\(hands[i + 1].id)' (score \(score2))")
+        }
+    }
+
+    func testRecommendedDecorationsRespectTags() {
+        let data = KaomojiData.shared
+        let expr = Expression(id: "test", face: "test", category: "happy", tags: ["cute"])
+        let decos = data.recommendedDecorations(for: expr)
+        // タグ "cute" を持つ装飾がスコア0の装飾より前に来ること
+        let firstMatchIndex = decos.firstIndex { $0.compatibleWith.contains("cute") }
+        let firstNoMatchIndex = decos.firstIndex { !$0.compatibleWith.contains("cute") && $0.id != "none" }
+        if let matchIdx = firstMatchIndex, let noMatchIdx = firstNoMatchIndex {
+            XCTAssertLessThan(matchIdx, noMatchIdx,
+                "Decorations matching tags should appear before non-matching ones")
+        }
+    }
+
     func testNoEmojiInDecorations() {
         let data = KaomojiData.shared
         for deco in data.decorations {
