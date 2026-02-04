@@ -10,7 +10,7 @@ struct KeyboardView: View {
     @State private var selectedTab: KeyboardTab = .expression
     @State private var selectedCategory: ExpressionCategory = .happy
     @State private var previewScale: CGFloat = 1.0
-    @State private var dragOffset: CGFloat = 0
+    @State private var isSwiping = false
 
     private let data = KaomojiData.shared
 
@@ -34,9 +34,12 @@ struct KeyboardView: View {
         VStack(spacing: 0) {
             topBar
             gridArea
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: .infinity)
+                .frame(maxHeight: .infinity)
+                .clipped()
             bottomTabBar
         }
+        .frame(height: 216)
     }
 
     // MARK: - トップバー
@@ -87,8 +90,8 @@ struct KeyboardView: View {
             }
         }
         .padding(.horizontal, 3)
-        .padding(.top, 3)
-        .padding(.bottom, 2)
+        .padding(.top, 6)
+        .padding(.bottom, 3)
     }
 
     // MARK: - グリッド
@@ -98,38 +101,65 @@ struct KeyboardView: View {
     private var gridArea: some View {
         Group {
             switch selectedTab {
-            case .expression: expressionView
-            case .bracket:    partsGrid(makeBracketItems()) { id in builder.bracket = data.brackets.first { $0.id == id } }
-            case .hand:       partsGrid(makeHandItems()) { id in builder.hand = data.hands.first { $0.id == id } }
-            case .decoration: partsGrid(makeDecorationItems()) { id in builder.decoration = data.decorations.first { $0.id == id } }
-            case .action:     partsGrid(makeActionItems()) { id in builder.action = data.actions.first { $0.id == id } }
+            case .expression:
+                expressionView
+            case .bracket:
+                partsGrid(makeBracketItems()) { id in
+                    builder.bracket = data.brackets.first { $0.id == id }
+                }
+            case .hand:
+                partsGrid(makeHandItems()) { id in
+                    builder.hand = data.hands.first { $0.id == id }
+                }
+            case .decoration:
+                partsGrid(makeDecorationItems()) { id in
+                    builder.decoration = data.decorations.first { $0.id == id }
+                }
+            case .action:
+                partsGrid(makeActionItems()) { id in
+                    builder.action = data.actions.first { $0.id == id }
+                }
             }
         }
     }
 
-    // MARK: - 表情: スワイプでカテゴリ切り替え（1カテゴリだけレンダリング）
+    // MARK: - 表情: 矢印でカテゴリ切り替え
 
     private var expressionView: some View {
         VStack(spacing: 0) {
-            // カテゴリインジケーター
+            // カテゴリナビ: < カテゴリ名 >
             HStack(spacing: 0) {
-                Text(selectedCategory.displayName)
-                    .font(.system(size: 11))
-                    .foregroundColor(subColor)
-                Spacer()
-                // ドットインジケーター
-                HStack(spacing: 3) {
-                    ForEach(ExpressionCategory.allCases, id: \.self) { cat in
-                        Circle()
-                            .fill(cat == selectedCategory ? textColor : subColor.opacity(0.4))
-                            .frame(width: 5, height: 5)
-                    }
+                Button {
+                    moveCategory(by: -1)
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(canMoveCategory(by: -1) ? textColor : subColor.opacity(0.3))
+                        .frame(width: 28, height: 24)
+                        .contentShape(Rectangle())
                 }
-            }
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+                .disabled(!canMoveCategory(by: -1))
 
-            // グリッド（現在のカテゴリのみ）
+                Text(selectedCategory.displayName)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(textColor)
+                    .frame(maxWidth: .infinity)
+
+                Button {
+                    moveCategory(by: 1)
+                } label: {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(canMoveCategory(by: 1) ? textColor : subColor.opacity(0.3))
+                        .frame(width: 28, height: 24)
+                        .contentShape(Rectangle())
+                }
+                .disabled(!canMoveCategory(by: 1))
+            }
+            .padding(.horizontal, 3)
+            .padding(.vertical, 1)
+
+            // グリッド（現在のカテゴリのみ）+ スワイプ
             ScrollView {
                 LazyVGrid(columns: gridColumns, spacing: 4) {
                     ForEach(data.expressions(for: selectedCategory)) { expression in
@@ -137,6 +167,7 @@ struct KeyboardView: View {
                             label: expression.face,
                             isSelected: builder.expression?.id == expression.id
                         ) {
+                            guard !isSwiping else { return }
                             builder.expression = expression
                             if builder.bracket == nil {
                                 builder.bracket = data.brackets.first
@@ -147,23 +178,43 @@ struct KeyboardView: View {
                 .padding(.horizontal, 3)
                 .padding(.vertical, 2)
             }
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 30, coordinateSpace: .local)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 20)
+                    .onChanged { _ in
+                        isSwiping = true
+                    }
                     .onEnded { value in
                         let horizontal = value.translation.width
                         let vertical = value.translation.height
-                        // 横方向の移動が縦より大きい場合のみカテゴリ切り替え
-                        guard abs(horizontal) > abs(vertical) else { return }
-                        let allCases = ExpressionCategory.allCases
-                        guard let idx = allCases.firstIndex(of: selectedCategory) else { return }
-                        if horizontal < 0 && idx < allCases.count - 1 {
-                            selectedCategory = allCases[idx + 1]
-                        } else if horizontal > 0 && idx > 0 {
-                            selectedCategory = allCases[idx - 1]
+                        if abs(horizontal) > abs(vertical) && abs(horizontal) > 40 {
+                            if horizontal < 0 {
+                                moveCategory(by: 1)
+                            } else {
+                                moveCategory(by: -1)
+                            }
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            isSwiping = false
                         }
                     }
             )
+        }
+    }
+
+    private func canMoveCategory(by offset: Int) -> Bool {
+        let allCases = ExpressionCategory.allCases
+        guard let idx = allCases.firstIndex(of: selectedCategory) else { return false }
+        let newIdx = allCases.index(idx, offsetBy: offset, limitedBy: offset > 0 ? allCases.endIndex : allCases.startIndex)
+        return newIdx != nil
+    }
+
+    private func moveCategory(by offset: Int) {
+        let allCases = ExpressionCategory.allCases
+        guard let idx = allCases.firstIndex(of: selectedCategory) else { return }
+        if offset > 0 && idx < allCases.count - 1 {
+            selectedCategory = allCases[idx + 1]
+        } else if offset < 0 && idx > 0 {
+            selectedCategory = allCases[allCases.index(before: idx)]
         }
     }
 
@@ -176,22 +227,30 @@ struct KeyboardView: View {
     }
 
     private func makeBracketItems() -> [PartItem] {
-        data.brackets.map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : "\($0.open) \($0.close)", isSelected: builder.bracket?.id == $0.id) }
+        data.brackets.map {
+            PartItem(id: $0.id, label: $0.id == "none" ? "なし" : "\($0.open) \($0.close)", isSelected: builder.bracket?.id == $0.id)
+        }
     }
 
     private func makeHandItems() -> [PartItem] {
         let list = builder.expression.map { data.recommendedHands(for: $0) } ?? data.hands
-        return list.map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : "\($0.left) \($0.right)", isSelected: builder.hand?.id == $0.id) }
+        return list.map {
+            PartItem(id: $0.id, label: $0.id == "none" ? "なし" : "\($0.left) \($0.right)", isSelected: builder.hand?.id == $0.id)
+        }
     }
 
     private func makeDecorationItems() -> [PartItem] {
         let list = builder.expression.map { data.recommendedDecorations(for: $0) } ?? data.decorations
-        return list.map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : $0.char, isSelected: builder.decoration?.id == $0.id) }
+        return list.map {
+            PartItem(id: $0.id, label: $0.id == "none" ? "なし" : $0.char, isSelected: builder.decoration?.id == $0.id)
+        }
     }
 
     private func makeActionItems() -> [PartItem] {
         let list = builder.expression.map { data.recommendedActions(for: $0) } ?? data.actions
-        return list.map { PartItem(id: $0.id, label: $0.id == "none" ? "なし" : $0.suffix, isSelected: builder.action?.id == $0.id) }
+        return list.map {
+            PartItem(id: $0.id, label: $0.id == "none" ? "なし" : $0.suffix, isSelected: builder.action?.id == $0.id)
+        }
     }
 
     private func partsGrid(_ items: [PartItem], onSelect: @escaping (String) -> Void) -> some View {
@@ -211,16 +270,17 @@ struct KeyboardView: View {
     // MARK: - 下部タブバー
 
     private var bottomTabBar: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 2) {
             ForEach(KeyboardTab.allCases, id: \.self) { tab in
                 Button {
                     selectedTab = tab
                 } label: {
                     Text(tab.rawValue)
-                        .font(.system(size: 14, weight: selectedTab == tab ? .semibold : .regular))
+                        .font(.system(size: 15, weight: selectedTab == tab ? .semibold : .regular))
                         .foregroundColor(selectedTab == tab ? textColor : subColor)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 7)
+                        .frame(height: 36)
+                        .contentShape(Rectangle())
                         .background(selectedTab == tab ? keyBg : Color.clear)
                         .cornerRadius(5)
                 }
@@ -231,16 +291,16 @@ struct KeyboardView: View {
                     builder.reset()
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(subColor)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 36, height: 36)
                         .background(specialBg)
                         .cornerRadius(5)
                 }
             }
         }
         .padding(.horizontal, 3)
-        .padding(.vertical, 2)
+        .padding(.vertical, 3)
     }
 
     // MARK: - キーボタン
