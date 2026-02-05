@@ -17,12 +17,6 @@ struct ContentView: View {
                         Image(systemName: "face.smiling")
                         Text("マイ顔文字")
                     }
-
-                HistoryView()
-                    .tabItem {
-                        Image(systemName: "clock.arrow.circlepath")
-                        Text("履歴")
-                    }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

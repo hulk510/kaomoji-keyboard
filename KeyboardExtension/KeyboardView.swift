@@ -41,7 +41,9 @@ struct KeyboardView: View {
             gridArea
                 .frame(maxWidth: .infinity)
                 .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
                 .clipped()
+            Divider()
             bottomTabBar
         }
         .frame(height: 216)
@@ -150,11 +152,10 @@ struct KeyboardView: View {
                     Spacer()
                 }
             } else {
-                ScrollView {
+                NoDelayScrollView {
                     LazyVGrid(columns: gridColumns, spacing: 4) {
                         ForEach(items) { item in
                             keyButton(label: item.kaomoji, isSelected: activeEntry?.id == item.id) {
-                                // プレビューにセット（タップ入力はプレビューバーから）
                                 activeEntry = item
                                 builder.restore(from: item.builderState, data: data)
                             }
@@ -194,35 +195,15 @@ struct KeyboardView: View {
             .frame(height: 26)
 
             // 表情グリッド
-            ScrollView {
+            NoDelayScrollView {
                 LazyVGrid(columns: gridColumns, spacing: 4) {
                     ForEach(data.expressions(for: selectedCategory)) { expr in
-                        let variations = data.expressionVariations(for: expr.id).map {
-                            FlickVariation(id: $0.id, label: $0.face)
+                        keyButton(label: expr.face, isSelected: builder.expression?.id == expr.id) {
+                            builder.expression = expr
+                            if builder.bracket == nil {
+                                builder.bracket = data.brackets.first
+                            }
                         }
-                        FlickKeyView(
-                            label: expr.face,
-                            isSelected: builder.expression?.id == expr.id,
-                            variations: Array(variations.prefix(2)),
-                            onTap: {
-                                builder.expression = expr
-                                if builder.bracket == nil {
-                                    builder.bracket = data.brackets.first
-                                }
-                            },
-                            onFlick: { varID in
-                                if let varExpr = data.expressions.first(where: { $0.id == varID }) {
-                                    builder.expression = varExpr
-                                    if builder.bracket == nil {
-                                        builder.bracket = data.brackets.first
-                                    }
-                                }
-                            },
-                            keyBg: keyBg,
-                            selectedKeyBg: selectedKeyBg,
-                            textColor: textColor,
-                            keyShadow: keyShadow
-                        )
                     }
                 }
                 .padding(.horizontal, 3)
@@ -245,7 +226,7 @@ struct KeyboardView: View {
                     Spacer()
                 }
             } else {
-                ScrollView {
+                NoDelayScrollView {
                     LazyVGrid(columns: gridColumns, spacing: 4) {
                         ForEach(items) { item in
                             keyButton(label: item.kaomoji, isSelected: false) {
@@ -264,7 +245,7 @@ struct KeyboardView: View {
     // MARK: - 飾タブ（装飾＋アクション統合）
 
     private var decorationView: some View {
-        ScrollView {
+        NoDelayScrollView {
             VStack(alignment: .leading, spacing: 4) {
                 sectionHeader("装飾")
                 LazyVGrid(columns: gridColumns, spacing: 4) {
@@ -339,7 +320,7 @@ struct KeyboardView: View {
     }
 
     private func partsGrid(_ items: [PartItem], onSelect: @escaping (String) -> Void) -> some View {
-        ScrollView {
+        NoDelayScrollView {
             LazyVGrid(columns: gridColumns, spacing: 4) {
                 ForEach(items) { item in
                     keyButton(label: item.label, isSelected: item.isSelected) {
@@ -364,7 +345,7 @@ struct KeyboardView: View {
                         .font(.system(size: 15, weight: selectedTab == tab ? .semibold : .regular))
                         .foregroundColor(selectedTab == tab ? textColor : subColor)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 42)
+                        .frame(height: 44)
                         .background(selectedTab == tab ? keyBg : Color.clear)
                         .cornerRadius(5)
                         .contentShape(Rectangle())
@@ -380,7 +361,7 @@ struct KeyboardView: View {
                     Image(systemName: "xmark")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(subColor)
-                        .frame(width: 42, height: 42)
+                        .frame(width: 44, height: 44)
                         .background(specialBg)
                         .cornerRadius(5)
                         .contentShape(Rectangle())
@@ -389,7 +370,8 @@ struct KeyboardView: View {
             }
         }
         .padding(.horizontal, 3)
-        .padding(.vertical, 2)
+        .padding(.top, 2)
+        .padding(.bottom, 6)
     }
 
     // MARK: - キーボタン
@@ -402,11 +384,57 @@ struct KeyboardView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 9)
+                .frame(minHeight: 36)
                 .background(isSelected ? selectedKeyBg : keyBg)
                 .cornerRadius(5)
                 .shadow(color: keyShadow, radius: 0, x: 0, y: 1)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - ScrollViewタッチ遅延無効化
+
+struct NoDelayScrollView<Content: View>: UIViewRepresentable {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    func makeUIView(context: Context) -> UIScrollView {
+        let hosting = UIHostingController(rootView: content)
+        hosting.view.translatesAutoresizingMaskIntoConstraints = false
+        hosting.view.backgroundColor = .clear
+
+        let scrollView = UIScrollView()
+        scrollView.delaysContentTouches = false
+        scrollView.canCancelContentTouches = true
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.addSubview(hosting.view)
+
+        context.coordinator.hostingController = hosting
+
+        NSLayoutConstraint.activate([
+            hosting.view.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+            hosting.view.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+            hosting.view.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+            hosting.view.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+            hosting.view.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
+        ])
+
+        return scrollView
+    }
+
+    func updateUIView(_ uiView: UIScrollView, context: Context) {
+        context.coordinator.hostingController?.rootView = content
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    class Coordinator {
+        var hostingController: UIHostingController<Content>?
     }
 }
 

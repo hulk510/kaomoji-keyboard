@@ -36,14 +36,12 @@
 		C1000009 /* expressions.json in Resources */ = {isa = PBXBuildFile; fileRef = A2000023 /* expressions.json */; };
 		A1000060 /* KaomojiStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000030 /* KaomojiStorage.swift */; };
 		A1000061 /* KaomojiStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000030 /* KaomojiStorage.swift */; };
-		A1000062 /* FlickKeyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000031 /* FlickKeyView.swift */; };
 		C1000010 /* KaomojiStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2000005 /* KaomojiStorageTests.swift */; };
 		C1000011 /* KaomojiStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000030 /* KaomojiStorage.swift */; };
 		A1000070 /* WorkshopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000040 /* WorkshopView.swift */; };
 		A1000071 /* WorkshopGridCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000041 /* WorkshopGridCell.swift */; };
 		A1000072 /* MyKaomojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000042 /* MyKaomojiView.swift */; };
 		A1000073 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000043 /* SettingsView.swift */; };
-		A1000074 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000044 /* HistoryView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,13 +99,11 @@
 		C2000004 /* PerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		C3000001 /* KaomojiKeyboardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaomojiKeyboardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2000030 /* KaomojiStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaomojiStorage.swift; sourceTree = "<group>"; };
-		A2000031 /* FlickKeyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickKeyView.swift; sourceTree = "<group>"; };
 		C2000005 /* KaomojiStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaomojiStorageTests.swift; sourceTree = "<group>"; };
 		A2000040 /* WorkshopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkshopView.swift; sourceTree = "<group>"; };
 		A2000041 /* WorkshopGridCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkshopGridCell.swift; sourceTree = "<group>"; };
 		A2000042 /* MyKaomojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyKaomojiView.swift; sourceTree = "<group>"; };
 		A2000043 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		A2000044 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -157,7 +153,6 @@
 				A2000041 /* WorkshopGridCell.swift */,
 				A2000042 /* MyKaomojiView.swift */,
 				A2000043 /* SettingsView.swift */,
-				A2000044 /* HistoryView.swift */,
 				A2000003 /* Assets.xcassets */,
 			);
 			path = KaomojiKeyboard;
@@ -170,7 +165,6 @@
 				A2000026 /* KeyboardExtension.entitlements */,
 				A2000010 /* KeyboardViewController.swift */,
 				A2000011 /* KeyboardView.swift */,
-				A2000031 /* FlickKeyView.swift */,
 				A2000012 /* Info.plist */,
 			);
 			path = KeyboardExtension;
@@ -352,7 +346,6 @@
 				A1000071 /* WorkshopGridCell.swift in Sources */,
 				A1000072 /* MyKaomojiView.swift in Sources */,
 				A1000073 /* SettingsView.swift in Sources */,
-				A1000074 /* HistoryView.swift in Sources */,
 				A1000020 /* KaomojiData.swift in Sources */,
 				A1000021 /* KaomojiBuilder.swift in Sources */,
 				A1000022 /* Models.swift in Sources */,
@@ -367,7 +360,6 @@
 			files = (
 				A1000010 /* KeyboardViewController.swift in Sources */,
 				A1000011 /* KeyboardView.swift in Sources */,
-				A1000062 /* FlickKeyView.swift in Sources */,
 				A1000030 /* KaomojiData.swift in Sources */,
 				A1000031 /* KaomojiBuilder.swift in Sources */,
 				A1000032 /* Models.swift in Sources */,

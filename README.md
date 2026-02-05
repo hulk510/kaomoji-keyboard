@@ -27,7 +27,6 @@ KaomojiKeyboard/
 ├── KeyboardExtension/        # キーボード拡張
 │   ├── KeyboardViewController.swift
 │   ├── KeyboardView.swift    # キーボードUI
-│   ├── FlickKeyView.swift    # フリック入力対応キー
 │   └── Info.plist
 │
 ├── Shared/                   # 共通コード（App Group経由で共有）
