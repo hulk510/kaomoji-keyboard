@@ -7,7 +7,7 @@ struct KeyboardView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var builder = KaomojiBuilder()
-    @State private var selectedTab: KeyboardTab = .dictionary
+    @State private var selectedTab: KeyboardTab = .expression
     @State private var activeEntry: RegisteredKaomoji?
     @State private var previewScale: CGFloat = 1.0
     @State private var selectedCategory: ExpressionCategory = .happy
@@ -48,9 +48,6 @@ struct KeyboardView: View {
         .onAppear {
             if !didPickInitialTab {
                 didPickInitialTab = true
-                if storage.getRegistered().isEmpty {
-                    selectedTab = .expression
-                }
             }
         }
     }
@@ -142,9 +139,12 @@ struct KeyboardView: View {
         let items = storage.getRegistered()
         return Group {
             if items.isEmpty {
-                VStack {
+                VStack(spacing: 6) {
                     Spacer()
-                    Text("アプリで顔文字を登録しよう")
+                    Text("(　´・ω・｀)")
+                        .font(.system(size: 20))
+                        .foregroundColor(subColor)
+                    Text("アプリで顔文字を登録してください")
                         .font(.system(size: 13))
                         .foregroundColor(subColor)
                     Spacer()
@@ -355,7 +355,7 @@ struct KeyboardView: View {
     // MARK: - 下部タブバー
 
     private var bottomTabBar: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: 0) {
             ForEach(KeyboardTab.allCases, id: \.self) { tab in
                 Button {
                     selectedTab = tab
@@ -364,11 +364,12 @@ struct KeyboardView: View {
                         .font(.system(size: 15, weight: selectedTab == tab ? .semibold : .regular))
                         .foregroundColor(selectedTab == tab ? textColor : subColor)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 36)
-                        .contentShape(Rectangle())
+                        .frame(height: 42)
                         .background(selectedTab == tab ? keyBg : Color.clear)
                         .cornerRadius(5)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
 
             if builder.hasSelection {
@@ -379,14 +380,16 @@ struct KeyboardView: View {
                     Image(systemName: "xmark")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(subColor)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 42, height: 42)
                         .background(specialBg)
                         .cornerRadius(5)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 3)
-        .padding(.vertical, 3)
+        .padding(.vertical, 2)
     }
 
     // MARK: - キーボタン
@@ -396,6 +399,8 @@ struct KeyboardView: View {
             Text(label)
                 .font(.system(size: 17))
                 .foregroundColor(textColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 9)
                 .background(isSelected ? selectedKeyBg : keyBg)
